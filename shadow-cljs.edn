@@ -1,0 +1,10 @@
+{:dev-http {8080 "resources/public"}
+ :builds
+ {:dev
+  {:target :browser
+   :devtools {:watch-dir "resources/public"}
+   :output-dir "resources/public/js"
+   :asset-path "/js"
+   :modules
+   {:main {:entries [user]
+           #_#_:init-fn user/start!}}}}}
