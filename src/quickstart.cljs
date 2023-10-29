@@ -9,8 +9,8 @@
 (tests ; fun async tests at the REPL, see https://github.com/hyperfiddle/rcf
   "a continuous flow"
   (def !a (atom 0)) ; variable input
-  (def <a (m/watch !a)) ; continuous flow of successive values of variable !a
-  (def <b (m/latest inc <a)) ; map (as continuous flow, i.e. `inc` is computed on sample, pulled not pushed)
+  (def >a (m/watch !a)) ; continuous flow of successive values of variable !a
+  (def <b (m/latest inc >a)) ; map (as continuous flow, i.e. `inc` is computed on sample, pulled not pushed)
 
   ; Run the flow
   (def main ; a process task – run the process until it terminates
@@ -272,8 +272,133 @@
 
 
 
+; Topic: Backpressure! It's time
+; Backpressure is the essence of Missionary. Missionary can be seen as the
+; language of backpressure: a vocabulary of functional combinators that lets a
+; concurrency master (that's you, this is why you're here) explicitly express and
+; describe any possible async pipeline and let you fully control the backpressure
+; and memory consumption at every single point. Nothing is implied, assumed or
+; taken for granted. To understand Missionary is to understand Backpressure and
+; to understand Backpressure is to understand Missionary.
+;
+; Key question: what happens if the input changes faster than the entrypoint can
+; keep up with?
 
-; Backpressure explanation
+(defn broken-watch "same as my-watch above, but without m/relieve, and therefore discrete"
+  [!x]
+  (->> (m/observe
+         (fn [!]
+           (! @!x)
+           (let [k (gensym)]
+             (add-watch !x k (fn [k ref old new] (! new)))
+             #(remove-watch !x k))))
+    #_(m/relieve {}))) ; key difference - no relieve
+; that means, since we're not discarding stale values, the consumer must accept
+; every event. I switched terminology from "value" to "event" here since, without
+; m/relieve, this flow forces the consumer to see each transition, i.e. event.
+
+; So far we've been using m/reduce as our entrypoint to consume flows.
+; m/reduce consumes flows immediately, i.e. as fast as they can produce values,
+; reduce will consume them. So, actually we can't break anything AS LONG AS the
+; entrypoint keeps up with the writer:
+
+(tests
+  "fastest possible consumer - reduce samples immediately (and blocks writers)"
+  (def !a (atom 0))
+  (def >a (broken-watch !a)) ; no relieve
+  ; in single threaded env, consumer (reduce) blocks writer (observe)
+  (def main (m/reduce (fn [_ x] (tap x)) nil >a)) ; tap every value immediately
+  (def cancel (main {} {}))
+  % := 0
+  (do ; rapid succession
+    (swap! !a inc) ; tap to RCF queue
+    (swap! !a inc) ; tap
+    (swap! !a inc)) ; tap
+  % := 1 ; we see each value. No crash, despite forgetting to relieve
+  % := 2
+  % := 3
+  (cancel))
+
+; Commentary
+; Since reduce is blocking the browser thread, it's actually not possible for
+; some observed callback to fire faster than the entrypoint can consume. So if
+; the entrypoint can't keep up, the entire application (the js runtime) will
+; slow down, which blocks the callbacks as they are running in the same thread.
+; BUT, what if the consumer DOES NOT keep up?
 
 
-; Flow protocol
+; Aside: discrete clock, which we will use to slow down the consumer
+
+(defn clock "a discrete flow of nils, used to drive side effects"
+  ([interval-ms] (clock interval-ms nil))
+  ([interval-ms tick]
+   (m/ap
+     (loop []
+       (m/amb
+         (m/? (m/sleep interval-ms)) ; tick on falling edge, i.e. no initial value
+         (recur))))))
+
+(tests
+  "clock, note this test is slow"
+  (def main (->> (m/ap
+                   (tap
+                     (m/?< (clock 100))))
+              (m/reduce {} nil)))
+  (def cancel (main {} {}))
+  (def t0 (js/performance.now))
+  % := nil ; t=100ms
+  % := nil ; t=200ms
+  % := nil ; t=300ms
+  (cancel)
+  (def t1 (js/performance.now))
+  (def dt (- t1 t0))
+  (println dt)
+  (> dt 300) := true)
+
+
+; Back to backpressure
+
+(tests
+  "slower consumer"
+  (def !a (atom 0))
+  (def >a (broken-watch !a)) ; no relieve (i.e. discrete). Note: notationally, >a denotes discrete, <a denotes continuous
+  (def main (->> (m/sample vector >a (clock 100)) ; produce a discrete flow that samples a continuous flow with a clock flow
+              (m/zip tap) ; tap discretely as the sample is not available until t=100ms!
+              (m/reduce {} nil)))
+  (def cancel (main {} {}))
+  % := [0 nil]
+  (swap! !a inc) ; no problem yet
+  (try
+    (swap! !a inc) ; second one crashes
+    (println "never get here" %) ; hoping for [2 nil]
+    (catch js/Error ex
+      (type ex) := js/Error
+      (.-message ex) := "Can't process event - consumer is not ready."))
+
+  (cancel))
+
+; Commentary
+; "Consumer is not ready" is a "flow protocol violation".
+; Producers, once they send a value, are not allowed to send another value until
+; the first value has been consumed. This makes sense and matches reality, because
+; what can you do with the second value? You can either discard the stale event
+; — i.e. (m/relieve [} ...) — or you can queue the events (consuming unbounded
+; memory, now your app can run out of memory and requires capacity planning.
+; m/relieve is the primitive that encodes what to do in this situation where the
+; producer is moving faster than the consumer.
+
+(tests
+  "demonstrate consumer not ready"
+  (def !a (atom 0))
+  (def >a (broken-watch !a))
+  (def <a (m/relieve {} >a)) ; explicitly drop stale events, now we have a "latest value"
+  (def main (->> (m/sample vector <a (clock 100)) ; sample the latest value every 100ms
+              (m/zip tap)
+              (m/reduce {} nil)))
+  (def cancel (main {} {}))
+
+  % := [0 nil]
+  (do (swap! !a inc) (swap! !a inc) (swap! !a inc)) ; rapid succession
+  % := [3 nil] ; 1 and 2 were not seen, we sample the latest value! Yay
+  (cancel))
+
