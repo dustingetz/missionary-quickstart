@@ -146,6 +146,48 @@
 
 
 
+
+; Aside: "discard"
+; Discard is the fundamental operation of continuous flows, which always have a
+; latest value (i.e. they nearly always discard previous values: continuous
+; computations never care about anything but the lastest value).
+; See https://www.dustingetz.com/#/page/signals%20vs%20streams%2C%20in%20terms%20of%20backpressure%20(2023)
+
+(defn discard "aka {}, the default reducing function for continuous flows"
+  ([acc x] x)
+  ([acc] nil))
+
+(tests
+  "what is discard"
+  (discard 1) := nil
+  (discard 1 2) := 2
+  (discard 1 nil) := nil
+
+  "{} is exactly discard"
+  ({} 1) := nil
+  ({} 1 2) := 2
+  ({} 1 nil) := nil)
+
+(tests
+  "discard example usage"
+  (def <app (->> (m/observe (fn [!] (def emit! !) (fn cancel [])))
+              (m/reductions {} ::initial) ; discard
+              (m/relieve {}) ; discard
+              (m/latest tap)))
+  (def main (m/reduce {} nil <app)) ; discard
+  (def cancel (main {} {})) ; discard discard
+  % := ::initial
+  (emit! ::one)
+  % := ::one
+  (cancel))
+
+; Commentary
+; Everybody complains about this at first. Get over it, languages have idioms
+; and, as with the above 5 usages, you're going to write this all day every day.
+
+
+
+
 ; Example: managing a DOM element with m/observe.
 ; i.e. an effectful flow managing a dom element's lifecycle
 
@@ -161,7 +203,7 @@
 (tests ; run this one line by line at the REPL, so you can see the live DOM
   (def >app (input-silent js/document.body))
   (def main (m/reduce (fn [_ x] (println x)) nil >app))
-  (def cancel (main (fn [_]) (fn [_])))
+  (def cancel (main {} {})) ; recall {} is pronounced "discard"
   (some? (js/document.querySelector "body > input")) := true
   ; see live DOM in attached web browser.
   ; note the flow never emits any value as we are not subscribed to DOM events.
