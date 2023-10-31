@@ -42,11 +42,11 @@
             (fn notify [] (println ::notify)) ; called when a value is available to be sampled
             (fn terminate [] (println ::terminate)))) ; called when the process terminates
 
-  ; :quickstart/notify -- printed at console
+  ; :flow-protocol/notify -- printed at console
 
   ; `it` (i.e. iterator) is a handle to the running process, that you use to
   ; consume successive values as they become ready and notify.
-  ; `:quickstart/notify` is printed by the notify callback right away, signalling
+  ; `::notify` is printed by the notify callback right away, signalling
   ; to the downstream *consumer* (us) that the iterator (running flow) now has a
   ; value available to be *consumed*.
 
@@ -73,7 +73,7 @@
 
   ; When will this process next notify? When the atom changes. Let's do that now:
   (reset! !a 5)
-  ; :quickstart/notify -- the running flow has notified that it is in ready state.
+  ; ::notify -- the running flow has notified that it is in ready state.
 
   ; That means we can consume the value at our convenience:
   @it ; => 6
@@ -86,12 +86,12 @@
 
 
   (swap! !a inc)
-  ; :quickstart/notify
+  ; ::notify
   @it ; => 7
 
   ; two in rapid succession, no transfer in between
   (do (swap! !a inc) (swap! !a inc))
-  ; :quickstart/notify
+  ; ::notify
   @it ; => 9. 8 was skipped!
 
   ; Q: Why didn't it crash?
@@ -99,15 +99,15 @@
 
   ; Shutdown
   (it) ; => nil -- cancel
-  ; :quickstart/notify -- another notify!
+  ; ::notify -- another notify!
   ; Why? because no cleanup effects can happen until you sample!
 
   (try
     @it
-    (catch :default e
-      (js/console.log e)
+    (catch #?(:cljs :default :clj Exception) e
+      #?(:cljs (js/console.log e) :clj (println e))
       e)) ; => #object[Object [object Object]]
-  ; :quickstart/terminate
+  ; ::terminate
   ; missionary.Cancelled {message: 'Watch cancelled.'}
 
   ; Q: Why the try/catch boilerplate?
