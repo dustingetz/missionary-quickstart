@@ -1,5 +1,6 @@
 (ns quickstart
   "Missionary quickstart, for 10x devs with ADHD"
+  (:import [missionary Cancelled])
   (:require [hyperfiddle.rcf :refer [tests % tap with]]
             [missionary.core :as m]))
 
@@ -402,3 +403,6 @@
   (do (swap! !a inc) (swap! !a inc) (swap! !a inc)) ; rapid succession
   % := [3 nil] ; 1 and 2 were not seen, we sample the latest value! Yay
   (cancel))
+
+
+; Part 2: see src/flow_protocol.cljc

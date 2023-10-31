@@ -42,7 +42,7 @@
             (fn notify [] (println ::notify)) ; called when a value is available to be sampled
             (fn terminate [] (println ::terminate)))) ; called when the process terminates
 
-  ; :flow-protocol/notify -- printed at console
+  ; ::notify -- printed at console
 
   ; `it` (i.e. iterator) is a handle to the running process, that you use to
   ; consume successive values as they become ready and notify.
