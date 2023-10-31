@@ -260,7 +260,7 @@
               (apply m/latest vector (repeat 3 <input)))) ; Quiz: what will it do?
   (def main (m/reduce (fn [_ x] (println x)) nil <app))
   (def cancel (main (fn [_]) (fn [_])))
-  (count (seq (js/document.querySelectorAll "body > input"))) := 2
+  (count (seq (js/document.querySelectorAll "body > input"))) := 3
 
   ; type in browser!
   ; [asdf qwer]
