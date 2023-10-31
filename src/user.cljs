@@ -1,5 +1,6 @@
 (ns user
   (:require hyperfiddle.rcf
-            quickstart))
+            quickstart
+            flow-protocol))
 
 (hyperfiddle.rcf/enable!) ; runtime enable
