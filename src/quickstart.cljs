@@ -367,10 +367,11 @@
               (m/reduce {} nil)))
   (def cancel (main {} {}))
   % := [0 nil]
-  (swap! !a inc) ; no problem yet
+
   (try
-    (swap! !a inc) ; second one crashes
-    (println "never get here" %) ; hoping for [2 nil]
+    (do ; rapid succession
+      (swap! !a inc) ; no problem yet
+      (swap! !a inc)) ; second one crashes, we were hoping for [2 nil]
     (catch js/Error ex
       (type ex) := js/Error
       (.-message ex) := "Can't process event - consumer is not ready."))
