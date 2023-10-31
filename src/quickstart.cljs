@@ -40,8 +40,8 @@
 ; finishes! This is because the m/watch never naturally terminates, which is
 ; because the underlying atom doesn't have a notion of termination, i.e. atoms
 ; always have a present value and are never undefined.
-; The purpose of the process entrypoint is to perform I/O, otherwise you just have
-; a heater.
+; Like say a unix process, the purpose of the process entrypoint here is to
+; perform I/O, not to compute a result. Processes are run for effect.
 
 
 
@@ -122,8 +122,8 @@
 ; referentially transparent, even flows like this which describe an ordering of
 ; effects (e.g. clojure.core/add-watch, clojure.core/remove-watch, and `rcf/tap`).
 ; Referential transparency means you can reuse flow values, as compared to say a
-; javascript Promise, which is stateful (because the result is memoized, so it's
-; not a value) which means each promise object can only be run once.
+; javascript Promise, which is stateful (i.e the result is internally memoized,
+; so it's not simply a value, it's a reference with an identity).
 
 (tests
   "demonstration of flow reuse"
