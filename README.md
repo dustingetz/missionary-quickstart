@@ -9,8 +9,12 @@ Livecoding REPL introduction to [Missionary](https://github.com/leonoel/missiona
 
 * Clojure/Script project
 * Clone repo, open in your Clojure editor and jack in as ClojureScript browser REPL
-* **browser console** has REPL evaluation results. Partial incomplete results may be shown in the editor REPL, this is editor dependent!
 * If you break something while playing around, simply refresh the page, which gives you a clean slate REPL.
+* **browser console** has REPL evaluation results. Partial incomplete results may be shown in the editor REPL, this is editor dependent!
+
+![image](https://user-images.githubusercontent.com/124158/279403213-333c73e8-64c5-4c5a-b93b-190cb4645cad.png)
+
+*figure: test reports are in the browser console*
 
 ## Calva instructions
 
