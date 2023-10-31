@@ -9,8 +9,8 @@
 (tests ; fun async tests at the REPL, see https://github.com/hyperfiddle/rcf
   "a continuous flow"
   (def !a (atom 0)) ; variable input
-  (def >a (m/watch !a)) ; continuous flow of successive values of variable !a
-  (def <b (m/latest inc >a)) ; map (as continuous flow, i.e. `inc` is computed on sample, pulled not pushed)
+  (def <a (m/watch !a)) ; continuous flow of successive values of variable !a
+  (def <b (m/latest inc <a)) ; map (as continuous flow, i.e. `inc` is computed on sample, pulled not pushed)
 
   ; Run the flow
   (def main ; a process task – run the process until it terminates
