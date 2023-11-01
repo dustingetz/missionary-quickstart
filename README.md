@@ -2,13 +2,13 @@
 
 Livecoding REPL introduction to [Missionary](https://github.com/leonoel/missionary).
 
-* Part 1: building a managed DOM input in ClojureScript, which is the simplest real world use case. [src/quickstart.cljs](https://github.com/dustingetz/missionary-quickstart/blob/main/src/quickstart.cljs)
-* Part 2: flow protocol explainer (works in Clojure and ClojureScript). [src/flow_protocol.cljc](https://github.com/dustingetz/missionary-quickstart/blob/main/src/flow_protocol.cljc)
+* Part 1: [src/quickstart.cljs](https://github.com/dustingetz/missionary-quickstart/blob/main/src/quickstart.cljs), a managed DOM input, which is the simplest real world use case.
+* Part 2: [src/flow_protocol.cljc](https://github.com/dustingetz/missionary-quickstart/blob/main/src/flow_protocol.cljc): flow protocol explainer
 
 ## How to run
 
 * Clojure/Script project
-* Clone repo, open in your Clojure editor and jack in as ClojureScript browser REPL
+* Clone repo, open in your Clojure editor and jack into the project as ClojureScript browser REPL
 * If you break something while playing around, simply refresh the page, which gives you a clean slate REPL.
 * **browser console** has REPL evaluation results. Partial incomplete results may be shown in the editor REPL, this is editor dependent!
 
