@@ -10,7 +10,7 @@
 (tests ; fun async tests at the REPL, see https://github.com/hyperfiddle/rcf
   "a continuous flow"
   (def !a (atom 0)) ; variable input
-  (def <a (m/watch !a)) ; continuous flow of successive values of variable !a
+  (def <a (m/watch !a)) ; a continuous flow of successive values of variable !a
   (def <b (m/latest inc <a)) ; map (as continuous flow, i.e. `inc` is computed on sample, pulled not pushed)
 
   ; Run the flow
@@ -18,7 +18,8 @@
     (m/reduce ; consumer process -- consumes the flow, i.e. "flush"
       (fn [_ x] ; flow reducing function that sees each value
         (tap x)) ; tap to RCF async test queue (%)
-      nil <b))
+      nil
+      <b))
 
   (def cancel ; Running a task returns a cancellation callback.
     (main ; process entrypoint, a task that completes when the process terminates.

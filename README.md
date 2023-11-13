@@ -21,8 +21,8 @@ Livecoding REPL introduction to [Missionary](https://github.com/leonoel/missiona
 * "Start Project REPL and Connect (aka Jack In)"
 * "deps.edn + shadow-cljs"
 * validate browser REPL with `(type 1) ; => #object[Number]`
-* open src/quickstart.cljs
-* evaluate ns form
-* evaluate first test
+* open [src/quickstart.cljs](src/quickstart.cljs)
+* evaluate `ns` form
+* evaluate first `tests` form
 
 https://user-images.githubusercontent.com/124158/279404054-5e7fcb03-283e-4b4a-8ad1-8395f2be2297.mp4
